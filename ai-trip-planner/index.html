@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI와 함께 떠나는 우리 국토 여행</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Gowun Dodum', sans-serif; }
+        .map-container { width: 100%; max-width: 500px; margin: auto; }
+        .land-block { fill: #dcfce7; stroke: #166534; stroke-width: 4; cursor: pointer; transition: fill 0.2s ease-in-out; rx: 8; ry: 8; }
+        .land-block:hover { fill: #86efac; }
+        .land-block.selected { fill: #22c55e; }
+        .map-text { font-size: 24px; font-weight: bold; fill: #14532d; pointer-events: none; text-anchor: middle; dominant-baseline: central; }
+        .choice-btn { font-size: 1.125rem; padding: 0.75rem 1.5rem; background-color: #f0f0f0; color: #374151; border-radius: 9999px; font-weight: 600; transition: all 0.2s; }
+        .choice-btn:hover { background-color: #bbf7d0; color: #166534; }
+        .choice-btn.selected { background-color: #22c55e; color: white; }
+    </style>
+</head>
+<body class="bg-green-50 flex items-center justify-center min-h-screen p-4">
+    <div class="w-full max-w-4xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-lg p-6 md:p-10 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">AI와 함께 떠나는 우리 국토 여행!</h1>
+            <p class="text-gray-600 mb-8 text-lg">가고 싶은 지역과 여행 기간, 동반자를 선택하면 AI가 멋진 여행을 계획해 줄게요!</p>
+            <div class="space-y-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-green-700 mb-4">1. 어디로 떠날까요?</h2>
+                    <div class="map-container">
+                        <svg viewBox="0 0 500 750" id="korea-map"><g><rect id="seoul" class="land-block" x="50" y="50" width="180" height="150"></rect><text class="map-text" x="140" y="125">서울/경기</text><rect id="gangwon" class="land-block" x="240" y="50" width="210" height="180"></rect><text class="map-text" x="345" y="140">강원</text><rect id="chungnam" class="land-block" x="50" y="210" width="180" height="150"></rect><text class="map-text" x="140" y="285">충남</text><rect id="chungbuk" class="land-block" x="240" y="240" width="150" height="120"></rect><text class="map-text" x="315" y="300">충북</text><rect id="gyeongbuk" class="land-block" x="240" y="370" width="210" height="180"></rect><text class="map-text" x="345" y="460">경북</text><rect id="jeonbuk" class="land-block" x="50" y="370" width="180" height="150"></rect><text class="map-text" x="140" y="445">전북</text><rect id="jeonnam" class="land-block" x="50" y="530" width="180" height="150"></rect><text class="map-text" x="140" y="605">전남</text><rect id="gyeongnam" class="land-block" x="240" y="560" width="180" height="120"></rect><text class="map-text" x="330" y="620">경남</text><rect id="jeju" class="land-block" x="50" y="690" width="120" height="50"></rect><text class="map-text" x="110" y="715">제주</text></g></svg>
+                    </div>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-green-700 mb-4">2. 얼마나 다녀올까요?</h2>
+                    <div id="duration-selector" class="flex flex-wrap justify-center items-center gap-2 md:gap-4"><button class="choice-btn">당일치기</button><button class="choice-btn">1박 2일</button><button class="choice-btn">2박 3일</button><button class="choice-btn">3박 4일</button></div>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-green-700 mb-4">3. 누구와 함께 떠나나요?</h2>
+                    <div id="companion-selector" class="flex flex-wrap justify-center items-center gap-2 md:gap-4"><button class="choice-btn">👨‍👩‍👧‍👦 가족과 함께</button><button class="choice-btn">🧑‍🤝‍🧑 친구와 함께</button><button class="choice-btn">🙋‍♀️ 혼자서</button></div>
+                </div>
+            </div>
+            <div class="mt-12">
+                <button id="start-planning-btn" class="w-full md:w-auto text-white bg-green-600 hover:bg-green-700 rounded-full py-4 px-12 text-2xl font-bold transition-transform transform hover:scale-105 shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                    🚀 멋진 여행 계획 만들기!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = { region: null, duration: null, companion: null };
+        const regionNames = { seoul: '서울/경기', gangwon: '강원', chungbuk: '충북', chungnam: '충남', gyeongbuk: '경북', gyeongnam: '경남', jeonbuk: '전북', jeonnam: '전남', jeju: '제주' };
+        const regionBlocks = document.querySelectorAll('.land-block');
+        const durationButtons = document.querySelectorAll('#duration-selector .choice-btn');
+        const companionButtons = document.querySelectorAll('#companion-selector .choice-btn');
+        const startButton = document.getElementById('start-planning-btn');
+
+        function updateUI() {
+            regionBlocks.forEach(b => b.classList.toggle('selected', regionNames[b.id] === state.region));
+            durationButtons.forEach(b => b.classList.toggle('selected', b.innerText === state.duration));
+            companionButtons.forEach(b => b.classList.toggle('selected', b.innerText === state.companion));
+            startButton.disabled = !(state.region && state.duration && state.companion);
+        }
+
+        regionBlocks.forEach(block => block.addEventListener('click', () => { state.region = regionNames[block.id]; updateUI(); }));
+        durationButtons.forEach(button => button.addEventListener('click', () => { state.duration = button.innerText; updateUI(); }));
+        companionButtons.forEach(button => button.addEventListener('click', () => { state.companion = button.innerText; updateUI(); }));
+        
+        startButton.addEventListener('click', async () => {
+            if (startButton.disabled) return;
+            startButton.disabled = true;
+            startButton.innerHTML = 'AI가 계획을 짜는 중... 🤖';
+            try {
+                const response = await fetch('/.netlify/functions/getAIPlan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(state)
+                });
+                if (!response.ok) {
+                    let errorMessage = `AI 응답에 실패했어요. (상태 코드: ${response.status})`;
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.message) { errorMessage = errorData.message; }
+                    } catch (e) {
+                        // AI 심부름꾼이 시간 초과 등으로 텅 빈 응답을 보낼 때 이 오류를 잡습니다.
+                        console.error("오류 응답을 파싱할 수 없음:", e);
+                    }
+                    throw new Error(errorMessage);
+                }
+                const data = await response.json();
+                localStorage.setItem('aiPlan', JSON.stringify(data.plan));
+                localStorage.setItem('userInput', JSON.stringify(state));
+                window.location.href = 'plan.html';
+            } catch (error) {
+                console.error(error);
+                alert(error.message || '알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                startButton.disabled = false;
+                startButton.innerHTML = '🚀 멋진 여행 계획 만들기!';
+            }
+        });
+    </script>
+</body>
+</html>
